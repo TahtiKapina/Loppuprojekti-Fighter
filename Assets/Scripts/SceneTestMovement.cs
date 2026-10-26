@@ -1,13 +1,12 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class SceneTestMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float jumpForce = 14f;
-    [SerializeField] private int maxJumps = 2;
+    [SerializeField] private int maxJumps = 1;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
@@ -18,6 +17,9 @@ public class SceneTestMovement : MonoBehaviour
     private float horizontalInput;
     private bool isGrounded;
 
+    private bool isHitStunned = false;
+    private float hitstunTimer = 0.3f;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -25,6 +27,17 @@ public class SceneTestMovement : MonoBehaviour
 
     private void Update()
     {
+        if (isHitStunned)
+        {
+            hitstunTimer -= Time.deltaTime;
+            if (hitstunTimer <= 0f)
+            {
+                isHitStunned = false;
+                hitstunTimer = 0.3f; // Reset for next hit
+            }
+            return;
+        }
+
         // Get horizontal input (A/D or Left/Right Arrow)
         horizontalInput = Input.GetAxisRaw("Horizontal");
 
@@ -36,12 +49,12 @@ public class SceneTestMovement : MonoBehaviour
         }
 
         // Jump Input
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (Input.GetKeyDown(KeyCode.W) && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             Console.WriteLine("Jump happened");
         }
-        if (Input.GetButtonDown("Jump") && !isGrounded && maxJumps > 0)
+        if (Input.GetKeyDown(KeyCode.W) && !isGrounded && maxJumps > 0)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             maxJumps--;
@@ -51,6 +64,11 @@ public class SceneTestMovement : MonoBehaviour
     private void FixedUpdate()
     {
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
+    }
+    public void ApplyHitstun(float duration)
+    {
+        isHitStunned = true;
+        hitstunTimer = duration;
     }
 
     private void OnDrawGizmosSelected()
