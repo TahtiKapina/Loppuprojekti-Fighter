@@ -37,7 +37,7 @@ public class PlayerDamage : MonoBehaviour
         bool attackPressed = false;
 
         // Assign different keys based on Player ID
-        if (playerID == 1 && Input.GetKeyDown(KeyCode.J))
+        if (playerID == 1 && Input.GetKeyDown(KeyCode.G))
         {
             attackPressed = true;
         }
