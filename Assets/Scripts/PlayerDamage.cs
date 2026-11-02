@@ -3,7 +3,7 @@ using System.Collections;
 public class PlayerDamage : MonoBehaviour
 {
     [Header("Player Setup")]
-    [SerializeField] private int playerID;
+    [SerializeField] private int playerID; // Player 1 = 1, Player 2 = 2
 
     [Header("Player Stats")]
     [SerializeField] private int stocks = 3;
@@ -35,25 +35,50 @@ public class PlayerDamage : MonoBehaviour
     private void Update()
     {
         bool attackPressed = false;
+        string attackDirectionType = "Neutral";
 
-        // Assign different keys based on Player ID
-        if (playerID == 1 && Input.GetKeyDown(KeyCode.G))
+        if (playerID == 1)
         {
-            attackPressed = true;
+            if (Input.GetKeyDown(KeyCode.G) || Input.GetKeyDown(KeyCode.Joystick1Button2))
+            {
+                attackPressed = true;
+
+                // float vertical = Input.GetAxis("Vertical_P1");
+                // float horizontal = Input.GetAxis("Horizontal_P1");
+
+                // if (Input.GetKey(KeyCode.W) || vertical > 0.5f) attackDirectionType = "Up";
+                // else if (Input.GetKey(KeyCode.S) || vertical < -0.5f) attackDirectionType = "Down";
+                // else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Mathf.Abs(horizontal) > 0.3f) attackDirectionType = "Side";
+                // else attackDirectionType = "Neutral";
+            }
         }
-        else if (playerID == 2 && Input.GetKeyDown(KeyCode.Keypad2)) // Player 2 uses 'Numpad 2' key
+
+        else if (playerID == 2)
         {
-            attackPressed = true;
+            if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Joystick2Button2))
+            {
+                attackPressed = true;
+
+                // float vertical = Input.GetAxis("Vertical_P2");
+                // float horizontal = Input.GetAxis("Horizontal_P2");
+
+                // if (Input.GetKey(KeyCode.UpArrow) || vertical > 0.5f) attackDirectionType = "Up";
+                // else if (Input.GetKey(KeyCode.DownArrow) || vertical < -0.5f) attackDirectionType = "Down";
+                // else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow)) attackDirectionType = "Side";
+                // else attackDirectionType = "Neutral";
+            }
         }
 
         if (attackPressed)
         {
-            PerformAttack();
+            PerformAttack(attackDirectionType);
         }
     }
 
-    private void PerformAttack()
+    private void PerformAttack(string attackType)
     {
+        Debug.Log($"Player {playerID} performed a **{attackType}** attack!");
+
         // If no attack point is assigned, use the player's own position
         Vector2 checkPos = attackPoint != null ? (Vector2)attackPoint.position : (Vector2)transform.position;
 
