@@ -6,7 +6,7 @@ public class PlayerDamage : MonoBehaviour
     [SerializeField] private int playerID;
 
     [Header("Player Stats")]
-    [SerializeField] private int stocks = 3;
+    [SerializeField] public int stocks = 3;
     [SerializeField] private float currentPercentage = 0f;
     [SerializeField] private Vector3 respawnPoint;
 
