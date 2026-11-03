@@ -1,15 +1,18 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SceneTestMovement : MonoBehaviour
 {
     [Header("Player Setup")]
-    [SerializeField] private int playerID;
+    [SerializeField] private int playerID; // Player 1 = 1, Player 2 = 2
 
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float jumpForce = 14f;
     [SerializeField] private int maxJumps = 1;
+    private bool isFacingRight = true;
+    public bool IsFacingRight => isFacingRight;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
@@ -23,6 +26,11 @@ public class SceneTestMovement : MonoBehaviour
     [SerializeField] private float brakingStartPercent = 0.5f; // Start braking halfway through hitstun
 
     private Rigidbody2D rb;
+    [SerializeField] private InputActionAsset playerControlsAsset;
+    private PlayerInput playerInput; // Reference to new Input System component
+    private InputAction moveAction;
+    private InputAction jumpAction;
+
     private float horizontalInput;
     private bool isGrounded;
 
@@ -33,6 +41,31 @@ public class SceneTestMovement : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (playerControlsAsset != null)
+        {
+            // Find the correct Action Map depending on whether this is Player 1 or Player 2
+            var mapName = (playerID == 1) ? "Player1" : "Player2";
+            var playerMap = playerControlsAsset.FindActionMap(mapName);
+
+            if (playerMap != null)
+            {
+                playerMap.Enable(); // Turn on this player's map
+                moveAction = playerMap.FindAction("Move");
+                jumpAction = playerMap.FindAction("Jump");
+
+                if (moveAction == null) Debug.LogError("Could not find 'Move' action in map: " + mapName);
+                if (jumpAction == null) Debug.LogError("Could not find 'Jump' action in map: " + mapName);
+            }
+            else
+            {
+                Debug.LogError("Could not find Action Map: " + mapName);
+            }
+        }
+        else
+        {
+            Debug.LogError("Player Controls Asset is not assigned on " + gameObject.name);
+        }
     }
 
     private void Update()
@@ -55,7 +88,7 @@ public class SceneTestMovement : MonoBehaviour
             return;
         }
 
-        // Handle input based on player ID
+        // Read movement input values from the New Input System
         GetPlayerInput();
 
         // Ground Check
@@ -66,25 +99,13 @@ public class SceneTestMovement : MonoBehaviour
         }
 
         // Jump Input
-        if (playerID == 1)
+        if (jumpAction != null && jumpAction.WasPressedThisFrame())
         {
-            if (Input.GetKeyDown(KeyCode.W) && isGrounded)
+            if (isGrounded)
             {
                 Jump();
             }
-            else if (Input.GetKeyDown(KeyCode.W) && !isGrounded && maxJumps > 0)
-            {
-                Jump();
-                maxJumps--;
-            }
-        }
-        else if (playerID == 2)
-        {
-            if (Input.GetKeyDown(KeyCode.UpArrow) && isGrounded)
-            {
-                Jump();
-            }
-            else if (Input.GetKeyDown(KeyCode.UpArrow) && !isGrounded && maxJumps > 0)
+            else if (!isGrounded && maxJumps > 0)
             {
                 Jump();
                 maxJumps--;
@@ -94,19 +115,21 @@ public class SceneTestMovement : MonoBehaviour
 
     private void GetPlayerInput()
     {
-        horizontalInput = 0f;
+        if (moveAction != null)
+        {
+            // Read the 2D Vector (X = Left/Right, Y = Up/Down) from Move action
+            Vector2 moveVector = moveAction.ReadValue<Vector2>();
+            horizontalInput = moveVector.x;
 
-        if (playerID == 1)
-        {
-            // Player 1 uses A and D
-            if (Input.GetKey(KeyCode.A)) horizontalInput = -1f;
-            if (Input.GetKey(KeyCode.D)) horizontalInput = 1f;
-        }
-        else if (playerID == 2)
-        {
-            // Player 2 uses Left and Right Arrow keys
-            if (Input.GetKey(KeyCode.LeftArrow)) horizontalInput = -1f;
-            if (Input.GetKey(KeyCode.RightArrow)) horizontalInput = 1f;
+            // Track facing direction
+            if (horizontalInput < -0.1f)
+            {
+                isFacingRight = false;
+            }
+            else if (horizontalInput > 0.1f)
+            {
+                isFacingRight = true;
+            }
         }
     }
 
