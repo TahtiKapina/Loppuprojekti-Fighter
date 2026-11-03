@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 2b124fd5d12df264a8c1ccca30f275d8
+guid: cb1f2ee78a836574a86b1cea0eb7cbc0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7692795056416040080
-    second: Mr.slots_0
+      213: -6429851349536332370
+    second: Mr.Slots_Idle1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,11 +113,11 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Mr.slots_0
+      name: Mr.Slots_Idle1_0
       rect:
         serializedVersion: 2
-        x: 9
-        y: 16
+        x: 5
+        y: 14
         width: 51
         height: 44
       alignment: 0
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 07bd07487a3bd3590800000000000000
-      internalID: -7692795056416040080
+      spriteID: ea52250b34494c6a0800000000000000
+      internalID: -6429851349536332370
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Mr.slots_0: -7692795056416040080
+      Mr.Slots_Idle1_0: -6429851349536332370
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
