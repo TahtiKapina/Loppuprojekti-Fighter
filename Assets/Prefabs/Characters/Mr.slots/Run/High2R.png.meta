@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a88113bb29c83504398ec2485977b1fd
+guid: 78a74697c39c5f64e96897c8a8e3126a
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -116,9 +116,9 @@ TextureImporter:
       name: High2R_0
       rect:
         serializedVersion: 2
-        x: 12
-        y: 8
-        width: 44
+        x: 13
+        y: 10
+        width: 38
         height: 49
       alignment: 0
       pivot: {x: 0, y: 0}

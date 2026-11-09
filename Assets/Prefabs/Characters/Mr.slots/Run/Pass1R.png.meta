@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b5d3c725aff5176488ace1c18b08dd58
+guid: 4ed3b197246223b46b8cddd5d1f4fd0a
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -116,9 +116,9 @@ TextureImporter:
       name: Pass1R_0
       rect:
         serializedVersion: 2
-        x: 12
-        y: 8
-        width: 44
+        x: 13
+        y: 9
+        width: 36
         height: 49
       alignment: 0
       pivot: {x: 0, y: 0}
