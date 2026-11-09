@@ -9,15 +9,35 @@ public class MoveAnimation : MonoBehaviour
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
-    [SerializeField] private string playingBool = "IsPlaying";
+    [SerializeField] private string movingLeftBool = "MovingLeft";
+    [SerializeField] private string movingRightBool = "MovingRight";
+    [SerializeField] private string jumpingBool = "Jumping";
+    [SerializeField] private string fallingBool = "Falling";
+    [SerializeField] private string landingTrigger = "Landing";
+
+    [SerializeField, Min(0.01f)] private float maxFallSpeedForBlend = 14f;
+    [SerializeField, Min(0.01f)] private float maxRiseSpeedForBlend = 14f;
 
     private InputAction moveAction;
-    private InputAction jumpAction;
+    private SceneTestMovement playerMovement;
+    private Rigidbody2D playerRigidbody;
+
+    private bool hasGroundState;
+    private bool wasGrounded;
 
     private void Awake()
     {
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+
+        playerMovement = GetComponent<SceneTestMovement>();
+        playerRigidbody = GetComponent<Rigidbody2D>();
+
+        if (playerMovement == null)
+            Debug.LogError("SceneTestMovement was not found on this player.", this);
+
+        if (playerRigidbody == null)
+            Debug.LogError("Rigidbody2D was not found on this player.", this);
 
         if (playerControlsAsset == null)
         {
@@ -35,11 +55,10 @@ public class MoveAnimation : MonoBehaviour
         }
 
         moveAction = playerMap.FindAction("Move");
-        jumpAction = playerMap.FindAction("Jump");
 
-        if (moveAction == null || jumpAction == null)
+        if (moveAction == null)
         {
-            Debug.LogError($"Could not find 'Move' or 'Jump' in action map '{mapName}'.", this);
+            Debug.LogError($"Could not find 'Move' in action map '{mapName}'.", this);
             return;
         }
 
@@ -48,18 +67,64 @@ public class MoveAnimation : MonoBehaviour
 
     private void Update()
     {
-        if (animator == null || moveAction == null || jumpAction == null)
+        if (animator == null || playerMovement == null || playerRigidbody == null)
             return;
 
-        Vector2 movement = moveAction.ReadValue<Vector2>();
-        bool isPlaying = Mathf.Abs(movement.x) > 0.1f || jumpAction.IsPressed();
+        bool isGrounded = playerMovement.IsGrounded;
+        Vector2 movement = moveAction != null
+            ? moveAction.ReadValue<Vector2>()
+            : Vector2.zero;
 
-        animator.SetBool(playingBool, isPlaying);
+        bool movingLeft = isGrounded && movement.x < -0.1f;
+        bool movingRight = isGrounded && movement.x > 0.1f;
+        bool jumping = !isGrounded && playerRigidbody.linearVelocity.y > 0f;
+        bool falling = !isGrounded && playerRigidbody.linearVelocity.y <= 0f;
+
+        if (playerMovement.JumpPressed) 
+        {
+            if (isGrounded)
+            {
+                animator.SetTrigger("JumpTrigger");
+            }
+            else
+            {
+                animator.SetTrigger("JumpInAirTrigger");
+            }
+                playerMovement.JumpPressed = false; // Reset the jump pressed state after handling it
+        }
+        
+        animator.SetBool("IsGrounded", isGrounded);
+        animator.SetBool(movingLeftBool, movingLeft);
+        animator.SetBool(movingRightBool, movingRight);
+        animator.SetBool(jumpingBool, jumping);
+        animator.SetBool(fallingBool, falling);
+        animator.SetFloat("MoveGround", (movement.x + 1f) / 2f);   
+        animator.SetFloat("Y_Velocity", playerRigidbody.linearVelocity.y);
+
+        float verticalSpeed = playerRigidbody.linearVelocity.y;
+        float jumpBlend = Mathf.InverseLerp(
+            -maxFallSpeedForBlend,
+            maxRiseSpeedForBlend,
+            verticalSpeed);
+
+        animator.SetFloat("VerticalSpeed", jumpBlend);
+
+        if (hasGroundState && !wasGrounded && isGrounded)
+            animator.SetTrigger(landingTrigger);
+
+        wasGrounded = isGrounded;
+        hasGroundState = true;
     }
 
     private void OnDisable()
     {
-        if (animator != null)
-            animator.SetBool(playingBool, false);
+        if (animator == null)
+            return;
+
+        animator.SetBool(movingLeftBool, false);
+        animator.SetBool(movingRightBool, false);
+        animator.SetBool(jumpingBool, false);
+        animator.SetBool(fallingBool, false);
+        animator.ResetTrigger(landingTrigger);
     }
 }

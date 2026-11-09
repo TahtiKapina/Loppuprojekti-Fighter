@@ -11,6 +11,7 @@ public class SceneTestMovement : MonoBehaviour
     [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float jumpForce = 14f;
     [SerializeField] private int maxJumps = 1;
+    public bool JumpPressed { get; set; } = false;
     private bool isFacingRight = true;
     public bool IsFacingRight => isFacingRight;
 
@@ -172,6 +173,10 @@ public class SceneTestMovement : MonoBehaviour
 
     private void Jump()
     {
+        JumpPressed = true;
+    }
+    public void JumpFromAnimation (int unused)
+    {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
     }
 
@@ -197,4 +202,6 @@ public class SceneTestMovement : MonoBehaviour
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
     }
+
+    public bool IsGrounded => isGrounded;
 }
