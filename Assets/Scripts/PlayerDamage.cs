@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.InputSystem;
 public class PlayerDamage : MonoBehaviour
 {
     [Header("Player Setup")]
@@ -7,7 +8,7 @@ public class PlayerDamage : MonoBehaviour
 
     [Header("Player Stats")]
     [SerializeField] public int stocks = 3;
-    [SerializeField] private float currentPercentage = 0f;
+    [SerializeField] public float currentPercentage = 0f;
     [SerializeField] private Vector3 respawnPoint;
 
     [Header("Attack Settings")]
@@ -22,64 +23,102 @@ public class PlayerDamage : MonoBehaviour
     [SerializeField] private float hitstopDuration = 0.07f;
     [SerializeField] private float hitstunDuration = 0.2f;
 
+    [Header("Attack Offsets")]
+    [SerializeField] private Vector3 sideOffset = new Vector3(1f, 0f, 0f);
+    [SerializeField] private Vector3 upOffset = new Vector3(0f, 1.5f, 0f);
+    [SerializeField] private Vector3 downOffset = new Vector3(0f, -1f, 0f);
+    [SerializeField] private Vector3 neutralOffset = new Vector3(0.5f, 0f, 0f);
+
     private Rigidbody2D rb;
     private SceneTestMovement movementScript;
+    [SerializeField] private InputActionAsset playerControlsAsset;
+    private InputAction moveAction;
+    private InputAction attackAction;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         movementScript = GetComponent<SceneTestMovement>();
         respawnPoint = transform.position; // Save initial position as default respawn
+
+        if (playerControlsAsset != null)
+        {
+            var mapName = (playerID == 1) ? "Player1" : "Player2";
+            var playerMap = playerControlsAsset.FindActionMap(mapName);
+
+            if (playerMap != null)
+            {
+                playerMap.Enable();
+
+                attackAction = playerMap.FindAction("Attack");
+                moveAction = playerMap.FindAction("Move");
+            }
+            else
+            {
+                Debug.LogError("Could not find Action Map: " + mapName);
+            }
+        }
+        else
+        {
+            Debug.LogError("Player Controls Asset is not assigned on " + gameObject.name);
+        }
     }
 
     private void Update()
     {
-        bool attackPressed = false;
-        string attackDirectionType = "Neutral";
+        UpdateAttackPointPosition();
 
-        if (playerID == 1)
+        if (attackAction != null && attackAction.triggered)
         {
-            if (Input.GetKeyDown(KeyCode.G) || Input.GetKeyDown(KeyCode.Joystick1Button2))
-            {
-                attackPressed = true;
-
-                // float vertical = Input.GetAxis("Vertical_P1");
-                // float horizontal = Input.GetAxis("Horizontal_P1");
-
-                // if (Input.GetKey(KeyCode.W) || vertical > 0.5f) attackDirectionType = "Up";
-                // else if (Input.GetKey(KeyCode.S) || vertical < -0.5f) attackDirectionType = "Down";
-                // else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Mathf.Abs(horizontal) > 0.3f) attackDirectionType = "Side";
-                // else attackDirectionType = "Neutral";
-            }
-        }
-
-        else if (playerID == 2)
-        {
-            if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Joystick2Button2))
-            {
-                attackPressed = true;
-
-                // float vertical = Input.GetAxis("Vertical_P2");
-                // float horizontal = Input.GetAxis("Horizontal_P2");
-
-                // if (Input.GetKey(KeyCode.UpArrow) || vertical > 0.5f) attackDirectionType = "Up";
-                // else if (Input.GetKey(KeyCode.DownArrow) || vertical < -0.5f) attackDirectionType = "Down";
-                // else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow)) attackDirectionType = "Side";
-                // else attackDirectionType = "Neutral";
-            }
-        }
-
-        if (attackPressed)
-        {
-            PerformAttack(attackDirectionType);
+            PerformAttack();         
         }
     }
 
-    private void PerformAttack(string attackType)
+    private void UpdateAttackPointPosition()
     {
-        Debug.Log($"Player {playerID} performed a **{attackType}** attack!");
+        if (attackPoint == null) return;
 
-        // If no attack point is assigned, use the player's own position
+        Vector3 targetOffset = neutralOffset;
+
+        if (moveAction != null)
+        {
+            Vector2 moveInput = moveAction.ReadValue<Vector2>();
+            float horizontal = moveInput.x;
+            float vertical = moveInput.y;
+
+            // Determine offset based on where the stick is pointing right now
+            if (vertical > 0.5f)
+            {
+                targetOffset = upOffset;
+            }
+            else if (vertical < -0.5f)
+            {
+                targetOffset = downOffset;
+            }
+            else if (Mathf.Abs(horizontal) > 0.3f)
+            {
+                targetOffset = sideOffset;
+                // Face the offset in the direction of the horizontal input
+                targetOffset.x = Mathf.Sign(horizontal) * Mathf.Abs(sideOffset.x);
+            }
+            else
+            {
+                // Neutral: Default to facing direction based on character scale
+                float facingDir = Mathf.Sign(transform.localScale.x != 0 ? transform.localScale.x : 1f);
+                targetOffset = neutralOffset;
+                targetOffset.x = Mathf.Abs(neutralOffset.x) * facingDir;
+            }
+        }
+
+        // Apply the position smoothly or instantly to the child object
+        attackPoint.localPosition = targetOffset;
+    }
+
+    private void PerformAttack()
+    {
+        Debug.Log($"Player {playerID} performed an attack!");
+
+        // Set the attackPoint's local position based on the calculated offset
         Vector2 checkPos = attackPoint != null ? (Vector2)attackPoint.position : (Vector2)transform.position;
 
         Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(checkPos, attackRange, playerLayer);
@@ -96,7 +135,7 @@ public class PlayerDamage : MonoBehaviour
                 // Calculate knockback based on attakers position
                 Vector2 attackDirection = (hit.transform.position - transform.position).normalized;
 
-                // Add an upward bias so they launch diagonally instead of straight sideways
+                // upward bias
                 attackDirection.y += 0.2f;
 
                 // Deal damage and trigger knockback

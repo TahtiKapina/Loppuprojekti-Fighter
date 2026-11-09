@@ -27,7 +27,7 @@ public class SceneTestMovement : MonoBehaviour
 
     private Rigidbody2D rb;
     [SerializeField] private InputActionAsset playerControlsAsset;
-    private PlayerInput playerInput; // Reference to new Input System component
+    private PlayerInput playerInput;
     private InputAction moveAction;
     private InputAction jumpAction;
 
@@ -56,6 +56,43 @@ public class SceneTestMovement : MonoBehaviour
 
                 if (moveAction == null) Debug.LogError("Could not find 'Move' action in map: " + mapName);
                 if (jumpAction == null) Debug.LogError("Could not find 'Jump' action in map: " + mapName);
+
+                if (Gamepad.all.Count >= playerID)
+                {
+                    // Player 1 gets Gamepad.all[0], Player 2 gets Gamepad.all[1]
+                    InputDevice targetDevice = Gamepad.all[playerID - 1];
+
+                    if (playerID == 1 && Keyboard.current != null)
+                    {
+                        playerMap.devices = new InputDevice[] { targetDevice, Keyboard.current };
+                    }
+                    else
+                    {
+                        // Player 2 gets their specific gamepad
+                        playerMap.devices = new InputDevice[] { targetDevice };
+                    }
+                }
+                else
+                {
+                    // if player 1 has no gamepad, allow keyboard; 
+                    if (playerID == 1 && Keyboard.current != null)
+                    {
+                        playerMap.devices = new InputDevice[] { Keyboard.current };
+                    }
+                    else if (playerID == 2 && Keyboard.current != null)
+                    {
+                        // Player 2 falls back to keyboard if only 1 controller is plugged in (or 0)
+                        playerMap.devices = new InputDevice[] { Keyboard.current };
+                        Debug.Log("Player 2 falling back to Keyboard controls.");
+                    }
+                    else
+                    {
+                        // Player 2 has no second controller, so keep them disabled
+                        playerMap.devices = new InputDevice[0];
+                        playerMap.Disable();
+                        Debug.LogWarning($"Not enough gamepads connected for Player {playerID}. Controls disabled.");
+                    }
+                }
             }
             else
             {
