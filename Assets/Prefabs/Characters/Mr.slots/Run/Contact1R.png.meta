@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 56cc65dc8f014cb42a78d2d31f258d69
+guid: 04d3e2a316509014d81bf7bde6a20238
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -116,9 +116,9 @@ TextureImporter:
       name: Contact1R_0
       rect:
         serializedVersion: 2
-        x: 12
-        y: 10
-        width: 45
+        x: 9
+        y: 8
+        width: 44
         height: 47
       alignment: 0
       pivot: {x: 0, y: 0}
