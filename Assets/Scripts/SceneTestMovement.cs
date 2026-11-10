@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -33,6 +34,8 @@ public class SceneTestMovement : MonoBehaviour
     [SerializeField] private float ledgeCooldownDuration = 0.5f;
     private float ledgeCooldownTimer = 0f;
     private bool isLedgeGrabbed = false;
+    private bool wasLedgeGrabbed = false;
+    private Vector2 grabdir;
     private Transform currentLedge;
 
     private Rigidbody2D rb;
@@ -138,7 +141,8 @@ public class SceneTestMovement : MonoBehaviour
         // Read movement input values from the New Input System
         GetPlayerInput();
 
-        if(isLedgeGrabbed)
+
+        if (isLedgeGrabbed)
         {
             rb.linearVelocity = Vector2.zero;
 
@@ -160,13 +164,28 @@ public class SceneTestMovement : MonoBehaviour
             ledgeCooldownTimer -= Time.deltaTime;
         }
 
-        if (!isGrounded && rb.linearVelocity.y < 0 && ledgeCheck != null && ledgeCooldownTimer <= 0f)
+        isLedgeGrabbed = false;
+
+        if (!isGrounded && ledgeCheck != null && ledgeCooldownTimer <= 0f)
         {
             Collider2D ledgeHit = Physics2D.OverlapCircle(ledgeCheck.position, ledgeCheckRadius, ledgeLayer);
             if (ledgeHit != null)
             {
-                GrabLedge(ledgeHit.transform);
+                Vector2 closestPoint = ledgeHit.ClosestPoint(rb.position); // Optional: Get the closest point on the ledge collider to the player
+                Vector2 Toclosest = closestPoint - rb.position; // Optional: Calculate the direction to the ledge
+                float dot = Vector2.Dot(Toclosest.normalized, Vector2.up); // Optional: Check if the ledge is above the player
+                if (dot < 0.5f)
+                {
+                    GrabLedge(ledgeHit.transform);
+                    grabdir = new Vector2(Toclosest.x, 0).normalized; // Store the horizontal direction to the ledge for later use
+                }
             }
+        }
+
+        if (wasLedgeGrabbed && !isLedgeGrabbed)
+        {
+            // Player has just released the ledge, start cooldown
+            rb.linearVelocity = grabdir * 2f; // Optional: Apply a small push away from the ledge
         }
 
         // Ground Check
@@ -194,14 +213,19 @@ public class SceneTestMovement : MonoBehaviour
         {
             Debug.LogWarning("Ledge Check Transform is not assigned on " + gameObject.name);
         }
+
+        wasLedgeGrabbed = isLedgeGrabbed;
     }
 
     private void GrabLedge(Transform ledgeTransform)
     {
+        if(isLedgeGrabbed == false)
+        {
+
+        }
+        // rb.linearVelocity = Vector2.zero;
         isLedgeGrabbed = true;
         currentLedge = ledgeTransform;
-
-        rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
 
 
@@ -210,16 +234,16 @@ public class SceneTestMovement : MonoBehaviour
 
     private void ClimbUpLedge()
     {
-        isLedgeGrabbed = false;
         rb.simulated = true;
 
         // TODO: Shift player position slightly forward and upward onto the platform surface
-        transform.position += new Vector3(isFacingRight ? 1f : -1f, 1.5f, 0f);
+        rb.MovePosition(rb.position + new Vector2(0, 7.5f) * Time.deltaTime);
     }
 
     private void ReleaseLedge()
     {
         isLedgeGrabbed = false;
+        wasLedgeGrabbed = false;
         rb.simulated = true;
         ledgeCooldownTimer = ledgeCooldownDuration;
         rb.linearVelocity = new Vector2(0f, -2f);
