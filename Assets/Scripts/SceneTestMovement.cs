@@ -21,10 +21,19 @@ public class SceneTestMovement : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
 
     [Header("Knockback Braking Feel")]
-    [Range(0.5f, 0.98f)]
+    [Range(0.1f, 0.98f)]
     [SerializeField] private float brakingMultiplier = 0.85f; // Lower = harder/faster brakes
-    [Range(0.1f, 0.9f)]
+    [Range(0.1f, 0.99f)]
     [SerializeField] private float brakingStartPercent = 0.5f; // Start braking halfway through hitstun
+
+    [Header("Ledge Grab Settings")]
+    [SerializeField] private Transform ledgeCheck;
+    [SerializeField] private LayerMask ledgeLayer;
+    [SerializeField] private float ledgeCheckRadius = 0.15f;
+    [SerializeField] private float ledgeCooldownDuration = 0.5f;
+    private float ledgeCooldownTimer = 0f;
+    private bool isLedgeGrabbed = false;
+    private Transform currentLedge;
 
     private Rigidbody2D rb;
     [SerializeField] private InputActionAsset playerControlsAsset;
@@ -129,6 +138,37 @@ public class SceneTestMovement : MonoBehaviour
         // Read movement input values from the New Input System
         GetPlayerInput();
 
+        if(isLedgeGrabbed)
+        {
+            rb.linearVelocity = Vector2.zero;
+
+            Vector2 currentMoveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
+            float vertical = currentMoveInput.y;
+
+            if (vertical > 0.5f || (jumpAction != null && jumpAction.WasPressedThisFrame()))
+            {
+                ClimbUpLedge();
+            }
+            else if(Input.GetKeyDown(KeyCode.S))
+            {
+                ReleaseLedge();
+            }
+        }
+
+        if (ledgeCooldownTimer > 0f)
+        {
+            ledgeCooldownTimer -= Time.deltaTime;
+        }
+
+        if (!isGrounded && rb.linearVelocity.y < 0 && ledgeCheck != null && ledgeCooldownTimer <= 0f)
+        {
+            Collider2D ledgeHit = Physics2D.OverlapCircle(ledgeCheck.position, ledgeCheckRadius, ledgeLayer);
+            if (ledgeHit != null)
+            {
+                GrabLedge(ledgeHit.transform);
+            }
+        }
+
         // Ground Check
         if (groundCheck != null)
         {
@@ -149,6 +189,40 @@ public class SceneTestMovement : MonoBehaviour
                 maxJumps--;
             }
         }
+
+        if (ledgeCheck == null)
+        {
+            Debug.LogWarning("Ledge Check Transform is not assigned on " + gameObject.name);
+        }
+    }
+
+    private void GrabLedge(Transform ledgeTransform)
+    {
+        isLedgeGrabbed = true;
+        currentLedge = ledgeTransform;
+
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+
+
+        Debug.Log("Grabbed ledge!");
+    }
+
+    private void ClimbUpLedge()
+    {
+        isLedgeGrabbed = false;
+        rb.simulated = true;
+
+        // TODO: Shift player position slightly forward and upward onto the platform surface
+        transform.position += new Vector3(isFacingRight ? 1f : -1f, 1.5f, 0f);
+    }
+
+    private void ReleaseLedge()
+    {
+        isLedgeGrabbed = false;
+        rb.simulated = true;
+        ledgeCooldownTimer = ledgeCooldownDuration;
+        rb.linearVelocity = new Vector2(0f, -2f);
     }
 
     private void GetPlayerInput()
@@ -184,7 +258,19 @@ public class SceneTestMovement : MonoBehaviour
     {
         if (isHitStunned) return;
 
-        rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
+        float targetSpeed = horizontalInput * moveSpeed;
+
+        if (Mathf.Abs(rb.linearVelocity.x) > moveSpeed)
+        {
+            rb.linearDamping = 8.0f;
+            return;
+        }
+        else
+        {
+            rb.linearDamping = 0.05f;
+        }
+
+        rb.linearVelocity = new Vector2(targetSpeed, rb.linearVelocity.y);
     }
     public void ApplyHitstun(float duration)
     {
@@ -200,6 +286,12 @@ public class SceneTestMovement : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
+        // Visual indicator in Scene view for Ledge Check
+        if (ledgeCheck != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(ledgeCheck.position, ledgeCheckRadius);
         }
     }
 

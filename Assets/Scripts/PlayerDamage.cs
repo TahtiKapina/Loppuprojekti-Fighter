@@ -185,14 +185,12 @@ public class PlayerDamage : MonoBehaviour
 
         // 2. Unfreeze physics
         rb.simulated = true;
-
-        // 3. Removes momentum from player
         rb.linearVelocity = Vector2.zero;
 
-        // 4. Apply the knockback
+        // 3. Apply the knockback
         rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
 
-        // 5. Allow hitstun flight timer to finish counting down
+        // 4. Allow hitstun flight timer to finish counting down
         yield return new WaitForSecondsRealtime(hitstunDuration);
     }
 
