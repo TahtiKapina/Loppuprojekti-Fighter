@@ -164,6 +164,7 @@ MonoBehaviour:
     m_Bits: 1024
   brakingMultiplier: 0.7
   brakingStartPercent: 0.5
+  playerControlsAsset: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
 --- !u!50 &2865987
 Rigidbody2D:
   serializedVersion: 5
@@ -1443,6 +1444,7 @@ MonoBehaviour:
     m_Bits: 1024
   brakingMultiplier: 0.7
   brakingStartPercent: 0.5
+  playerControlsAsset: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
 --- !u!50 &1752699167
 Rigidbody2D:
   serializedVersion: 5
@@ -2095,11 +2097,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4684222027290346738, guid: 2502c0cc07121e547863586c2afaf9e7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.6349
+      value: -0.03
       objectReference: {fileID: 0}
     - target: {fileID: 4684222027290346738, guid: 2502c0cc07121e547863586c2afaf9e7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -12.8032
+      value: -12.54
       objectReference: {fileID: 0}
     - target: {fileID: 4684222027290346738, guid: 2502c0cc07121e547863586c2afaf9e7, type: 3}
       propertyPath: m_LocalPosition.z

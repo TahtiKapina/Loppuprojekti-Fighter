@@ -19,8 +19,14 @@ public class PlayerDamage : MonoBehaviour
     [Header("Knockback Settings")]
     [SerializeField] private float baseKnockback = 10f;
     [SerializeField] private float percentageMultiplier = 0.05f;
+    [Header("Immunity Settings")]
     [SerializeField] private float hitstopDuration = 0.07f;
     [SerializeField] private float hitstunDuration = 0.2f;
+    [SerializeField] private float immunityDuration = 3f;
+    [SerializeField] private float flashInterval = 0.15f;
+
+    private bool isImmune = false;
+    private SpriteRenderer spriteRenderer;
 
     private Rigidbody2D rb;
     private SceneTestMovement movementScript;
@@ -30,6 +36,7 @@ public class PlayerDamage : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         movementScript = GetComponent<SceneTestMovement>();
         respawnPoint = transform.position; // Save initial position as default respawn
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
@@ -108,6 +115,12 @@ public class PlayerDamage : MonoBehaviour
 
     public void TakeDamage(float damageAmount, Vector2 attackDirection)
     {
+        Debug.Log("attack recieved. immune:" + isImmune);
+        if (isImmune)
+        {
+            Debug.Log("Attack blocked");
+            return;
+        }
         // Add damage %
         currentPercentage += damageAmount;
         Debug.Log($"Player hit! Current Damage: {currentPercentage}%");
@@ -163,6 +176,10 @@ public class PlayerDamage : MonoBehaviour
         currentPercentage = 0f; // Reset damage
         rb.linearVelocity = Vector2.zero; // Clear momentum
         transform.position = respawnPoint; // Move back to spawn position
+
+        Debug.Log("Respawn called - starting immunity frames");
+
+        StartCoroutine(ImmunityFrames());
     }
 
     private void OnDrawGizmosSelected()
@@ -175,4 +192,33 @@ public class PlayerDamage : MonoBehaviour
     // Helper getters for UI display
     public float GetPercentage() => currentPercentage;
     public int GetStocks() => stocks;
+    private IEnumerator ImmunityFrames()
+    {
+        isImmune = true;
+
+        Debug.Log("IMMUNITY ACTIVATED!");
+
+        float timer = 0f;
+
+        while (timer < immunityDuration)
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.enabled = !spriteRenderer.enabled;
+            }
+
+            yield return new WaitForSeconds(flashInterval);
+
+            timer += flashInterval;
+        }
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = true;
+        }
+
+        isImmune = false;
+
+        Debug.Log("IMMUNITY ENDED!");
+    }
 }
