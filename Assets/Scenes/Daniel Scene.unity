@@ -2829,7 +2829,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: baseKnockback
-      value: 10
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: hitstopDuration
@@ -2845,7 +2845,7 @@ PrefabInstance:
       objectReference: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: percentageMultiplier
-      value: 0.43
+      value: 0.16
       objectReference: {fileID: 0}
     - target: {fileID: 1509621666774349871, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2872,6 +2872,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1031315666}
     - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: climbDurationUp
+      value: 0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: ledgeCheckRadius
       value: 0.7
       objectReference: {fileID: 0}
@@ -2891,6 +2895,10 @@ PrefabInstance:
       propertyPath: playerControlsAsset
       value: 
       objectReference: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: jumpPreparationDuration
+      value: 0.06
+      objectReference: {fileID: 0}
     - target: {fileID: 3117392555417391188, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_BodyType
       value: 0
@@ -2941,11 +2949,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.4
+      value: -5.2699966
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.26
+      value: -2.1999998
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3231,6 +3239,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8dcb478d8839484f9cfd8ec53315fac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeathBarriers
+--- !u!1 &1279334738
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1279334740}
+  - component: {fileID: 1279334739}
+  m_Layer: 0
+  m_Name: DevTool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1279334739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1279334738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4152a03daea36ce428fc2778f5e9268c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DevTool
+--- !u!4 &1279334740
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1279334738}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.42156, y: 0.763, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1337304818
 GameObject:
   m_ObjectHideFlags: 0
@@ -3840,6 +3892,8 @@ MonoBehaviour:
   jumpingBool: Jumping
   fallingBool: Falling
   landingTrigger: Landing
+  moveBlendParameter: MoveGround
+  movementDeadzone: 0.1
   maxFallSpeedForBlend: 14
   maxRiseSpeedForBlend: 14
 --- !u!4 &2092285987 stripped
@@ -4079,7 +4133,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: baseKnockback
-      value: 5
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: neutralOffset.x
@@ -4091,7 +4145,7 @@ PrefabInstance:
       objectReference: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
     - target: {fileID: 924124048138817362, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: percentageMultiplier
-      value: 0.15
+      value: 0.16
       objectReference: {fileID: 0}
     - target: {fileID: 1509621666774349871, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4110,6 +4164,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 447466594}
     - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: climbUpSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: climbDurationUp
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: ledgeCheckRadius
       value: 0.7
       objectReference: {fileID: 0}
@@ -4125,6 +4187,14 @@ PrefabInstance:
       propertyPath: playerControlsAsset
       value: 
       objectReference: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: climbDurationForward
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1903240571292675331, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
+      propertyPath: jumpPreparationDuration
+      value: 0.06
+      objectReference: {fileID: 0}
     - target: {fileID: 3320028116945836069, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_Name
       value: Player 1
@@ -4167,11 +4237,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.83
+      value: -6.6
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.41
+      value: -2.2
       objectReference: {fileID: 0}
     - target: {fileID: 7131660759066408702, guid: a5e25bbbe7112da46a0ccdd3f3c8a561, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4256,6 +4326,8 @@ MonoBehaviour:
   jumpingBool: Jumping
   fallingBool: Falling
   landingTrigger: Landing
+  moveBlendParameter: MoveGround
+  movementDeadzone: 0.1
   maxFallSpeedForBlend: 14
   maxRiseSpeedForBlend: 14
 --- !u!95 &1536765229921405883
@@ -4299,3 +4371,4 @@ SceneRoots:
   - {fileID: 574311150}
   - {fileID: 480535815}
   - {fileID: 1834521369}
+  - {fileID: 1279334740}

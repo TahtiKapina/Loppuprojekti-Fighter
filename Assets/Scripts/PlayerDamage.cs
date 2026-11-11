@@ -165,7 +165,6 @@ public class PlayerDamage : MonoBehaviour
         }
         // Add damage %
         currentPercentage += damageAmount;
-        Debug.Log($"Player hit! Current Damage: {currentPercentage}%");
 
         float calculatedForce = baseKnockback + (currentPercentage * percentageMultiplier);
 

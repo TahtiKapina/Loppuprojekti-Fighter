@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -32,6 +33,11 @@ public class SceneTestMovement : MonoBehaviour
     [SerializeField] private LayerMask ledgeLayer;
     [SerializeField] private float ledgeCheckRadius = 0.15f;
     [SerializeField] private float ledgeCooldownDuration = 0.5f;
+    [SerializeField] private float climbUpSpeed = 10f;
+    [SerializeField] private float climbDurationUp = 0.15f;
+    [SerializeField] private float climbDurationForward = 0.15f;
+    [SerializeField] private Vector2 ledgeSnapOffset = new Vector2(0.5f, -0.2f);
+    private bool isClimbingLedge = false;
     private float ledgeCooldownTimer = 0f;
     private bool isLedgeGrabbed = false;
     private bool wasLedgeGrabbed = false;
@@ -51,11 +57,10 @@ public class SceneTestMovement : MonoBehaviour
     private float hitstunTimer = 0.3f;
     private float totalHitstunDuration = 0.3f;
 
+    [Header("Jump Settings")]
     [SerializeField, Min(0f)] private float jumpDirectionDeadzone = 0.1f;
-
     private bool isPreparingToJump;
     private float pendingJumpDirection;
-
     [SerializeField, Min(0f)] private float jumpPreparationDuration = 0.25f;
     private float jumpPreparationTimer;
     private bool waitingForAirborne;
@@ -155,30 +160,33 @@ public class SceneTestMovement : MonoBehaviour
         // Read movement input values from the New Input System
         GetPlayerInput();
 
-
-        if (isLedgeGrabbed)
-        {
-            rb.linearVelocity = Vector2.zero;
-
-            Vector2 currentMoveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
-            float vertical = currentMoveInput.y;
-
-            if (vertical > 0.5f || (jumpAction != null && jumpAction.WasPressedThisFrame()))
-            {
-                ClimbUpLedge();
-            }
-            else if(Input.GetKeyDown(KeyCode.S))
-            {
-                ReleaseLedge();
-            }
-        }
-
         if (ledgeCooldownTimer > 0f)
         {
             ledgeCooldownTimer -= Time.deltaTime;
         }
 
-        isLedgeGrabbed = false;
+        if (isLedgeGrabbed || isClimbingLedge)
+        {
+            if (isLedgeGrabbed)
+            {
+                rb.linearVelocity = Vector2.zero;
+
+                Vector2 currentMoveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
+                float vertical = currentMoveInput.y;
+
+                if (vertical > 0.5f || (jumpAction != null && jumpAction.WasPressedThisFrame()))
+                {
+                    StartCoroutine(PerformLedgeClimb());
+                }
+                else if (vertical < -0.5f || Input.GetKeyDown(KeyCode.S))
+                {
+                    ReleaseLedge();
+                }
+                return;
+            }
+        }
+
+
 
         if (!isGrounded && ledgeCheck != null && ledgeCooldownTimer <= 0f)
         {
@@ -196,11 +204,7 @@ public class SceneTestMovement : MonoBehaviour
             }
         }
 
-        if (wasLedgeGrabbed && !isLedgeGrabbed)
-        {
-            // Player has just released the ledge, start cooldown
-            rb.linearVelocity = grabdir * 2f; // Optional: Apply a small push away from the ledge
-        }
+
 
         // Ground Check
         if (groundCheck != null)
@@ -244,25 +248,23 @@ public class SceneTestMovement : MonoBehaviour
 
     private void GrabLedge(Transform ledgeTransform)
     {
-        if(isLedgeGrabbed == false)
-        {
+        if(isLedgeGrabbed) return;
 
-        }
-        // rb.linearVelocity = Vector2.zero;
         isLedgeGrabbed = true;
         currentLedge = ledgeTransform;
         rb.simulated = false;
+        rb.linearVelocity = Vector2.zero;
 
+        bool isLeftOfLedge = transform.position.x < ledgeTransform.position.x;
+
+        isFacingRight = isLeftOfLedge;
+
+        // Apply the snap offset based on which side of the ledge we're on
+        float horizontalOffset = isLeftOfLedge ? -Mathf.Abs(ledgeSnapOffset.x) : Mathf.Abs(ledgeSnapOffset.x);
+        Vector3 targetSnapPos = ledgeTransform.position + new Vector3(horizontalOffset, ledgeSnapOffset.y, 0f);
+        transform.position = targetSnapPos;
 
         Debug.Log("Grabbed ledge!");
-    }
-
-    private void ClimbUpLedge()
-    {
-        rb.simulated = true;
-
-        // TODO: Shift player position slightly forward and upward onto the platform surface
-        rb.MovePosition(rb.position + new Vector2(0, 7.5f) * Time.deltaTime);
     }
 
     private void ReleaseLedge()
@@ -272,6 +274,39 @@ public class SceneTestMovement : MonoBehaviour
         rb.simulated = true;
         ledgeCooldownTimer = ledgeCooldownDuration;
         rb.linearVelocity = new Vector2(0f, -2f);
+    }
+
+    private IEnumerator PerformLedgeClimb()
+    {
+        isLedgeGrabbed = false;
+        isClimbingLedge = true;
+        rb.simulated = true;
+
+        // --- Go Straight Up ---
+        float timer = 0f;
+        while (timer < climbDurationUp)
+        {
+            timer += Time.deltaTime;
+            // Lock X velocity to 0
+            rb.linearVelocity = new Vector2(0f, climbUpSpeed);
+            yield return null;
+        }
+
+        // --- Move Forward onto the Platform ---
+        timer = 0f;
+        float forwardDir = isFacingRight ? 5f : -5f;
+        while (timer < climbDurationForward)
+        {
+            timer += Time.deltaTime;    
+            // Push forward onto the platform with a slight upward drift
+            rb.linearVelocity = new Vector2(forwardDir, 0f);
+            yield return null;
+        }
+
+        // Finish up
+        isClimbingLedge = false;
+        ledgeCooldownTimer = ledgeCooldownDuration;
+        Debug.Log("Finished climbing ledge!");
     }
 
     private void GetPlayerInput()
@@ -327,7 +362,7 @@ public class SceneTestMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (isHitStunned)
+        if (isHitStunned || isClimbingLedge)
             return;
 
         if (isPreparingToJump)
