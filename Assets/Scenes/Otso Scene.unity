@@ -933,6 +933,7 @@ GameObject:
   - component: {fileID: 1565820884}
   - component: {fileID: 1565820882}
   - component: {fileID: 1565820883}
+  - component: {fileID: 1565820885}
   m_Layer: 0
   m_Name: Mr.slots_0
   m_TagString: Untagged
@@ -1036,7 +1037,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6429851349536332370, guid: cb1f2ee78a836574a86b1cea0eb7cbc0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -1088,6 +1089,8 @@ MonoBehaviour:
   brakingMultiplier: 0.85
   brakingStartPercent: 0.5
   playerControlsAsset: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
+  jumpDirectionDeadzone: 0.1
+  jumpPreparationDuration: 0.15
 --- !u!114 &1565820883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1108,6 +1111,10 @@ MonoBehaviour:
   jumpingBool: Jumping
   fallingBool: Falling
   landingTrigger: Landing
+  moveBlendParameter: MoveGround
+  movementDeadzone: 0.1
+  maxFallSpeedForBlend: 14
+  maxRiseSpeedForBlend: 14
 --- !u!58 &1565820884
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -1144,6 +1151,39 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: -0.0024046146, y: 0.007811629}
   m_Radius: 0.20284882
+--- !u!114 &1565820885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1565820876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 882ff59872c88e54888e65523df67b4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamage
+  playerID: 1
+  stocks: 3
+  currentPercentage: 0
+  respawnPoint: {x: 0, y: 0, z: 0}
+  attackDamage: 10
+  attackRange: 1.5
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  attackPoint: {fileID: 0}
+  baseKnockback: 10
+  percentageMultiplier: 0.05
+  hitstopDuration: 0.07
+  hitstunDuration: 0.2
+  immunityDuration: 3
+  flashInterval: 0.15
+  sideOffset: {x: 1, y: 0, z: 0}
+  upOffset: {x: 0, y: 1.5, z: 0}
+  downOffset: {x: 0, y: -1, z: 0}
+  neutralOffset: {x: 0.5, y: 0, z: 0}
+  playerControlsAsset: {fileID: -944628639613478452, guid: 59e2bcf51d91c504ea94970e087d14a0, type: 3}
 --- !u!1 &1750195469
 GameObject:
   m_ObjectHideFlags: 0

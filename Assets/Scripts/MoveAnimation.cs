@@ -14,6 +14,8 @@ public class MoveAnimation : MonoBehaviour
     [SerializeField] private string jumpingBool = "Jumping";
     [SerializeField] private string fallingBool = "Falling";
     [SerializeField] private string landingTrigger = "Landing";
+    [SerializeField] private string moveBlendParameter = "MoveGround";
+    [SerializeField, Min(0f)] private float movementDeadzone = 0.1f;
 
     [SerializeField, Min(0.01f)] private float maxFallSpeedForBlend = 14f;
     [SerializeField, Min(0.01f)] private float maxRiseSpeedForBlend = 14f;
@@ -70,35 +72,46 @@ public class MoveAnimation : MonoBehaviour
         if (animator == null || playerMovement == null || playerRigidbody == null)
             return;
 
-        bool isGrounded = playerMovement.IsGrounded;
+        float verticalVelocity = playerRigidbody.linearVelocity.y;
+
+        // Treat upward motion as airborne even if the ground check still overlaps.
+        bool isGrounded = playerMovement.IsGrounded && verticalVelocity <= 0.1f;
+
         Vector2 movement = moveAction != null
             ? moveAction.ReadValue<Vector2>()
             : Vector2.zero;
 
-        bool movingLeft = isGrounded && movement.x < -0.1f;
-        bool movingRight = isGrounded && movement.x > 0.1f;
-        bool jumping = !isGrounded && playerRigidbody.linearVelocity.y > 0f;
-        bool falling = !isGrounded && playerRigidbody.linearVelocity.y <= 0f;
+        bool directionLocked = playerMovement.IsJumpDirectionLocked;
+        float horizontalInput = directionLocked
+            ? playerMovement.PendingJumpDirection
+            : Mathf.Clamp(movement.x, -1f, 1f);
 
-        if (playerMovement.JumpPressed) 
+        if (Mathf.Abs(horizontalInput) < movementDeadzone)
+            horizontalInput = 0f;
+
+        bool movingLeft = isGrounded && !directionLocked && horizontalInput < 0f;
+        bool movingRight = isGrounded && !directionLocked && horizontalInput > 0f;
+        bool jumping = !isGrounded && verticalVelocity > 0f;
+        bool falling = !isGrounded && verticalVelocity <= 0f;
+
+        if (playerMovement.JumpPressed)
         {
             if (isGrounded)
-            {
                 animator.SetTrigger("JumpTrigger");
-            }
             else
-            {
                 animator.SetTrigger("JumpInAirTrigger");
-            }
-                playerMovement.JumpPressed = false; // Reset the jump pressed state after handling it
+
+            playerMovement.JumpPressed = false;
         }
-        
+
         animator.SetBool("IsGrounded", isGrounded);
         animator.SetBool(movingLeftBool, movingLeft);
         animator.SetBool(movingRightBool, movingRight);
         animator.SetBool(jumpingBool, jumping);
         animator.SetBool(fallingBool, falling);
-        animator.SetFloat("MoveGround", (movement.x + 1f) / 2f);   
+
+        // Blend tree values: 0 = left, 0.5 = in place, 1 = right.
+        animator.SetFloat(moveBlendParameter, (horizontalInput + 1f) * 0.5f);
         animator.SetFloat("Y_Velocity", playerRigidbody.linearVelocity.y);
 
         float verticalSpeed = playerRigidbody.linearVelocity.y;

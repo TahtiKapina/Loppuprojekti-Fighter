@@ -24,6 +24,8 @@ AnimationClip:
       value: {fileID: -6429851349536332370, guid: 90074d673367c3f408164403082f79ee, type: 3}
     - time: 0.125
       value: {fileID: 7460046300004610927, guid: 336ef80136c59cf49bd89aa72289b061, type: 3}
+    - time: 0.25
+      value: {fileID: -5966621866309598838, guid: fca63e13fe30c7643982ea375bf04815, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
@@ -48,6 +50,7 @@ AnimationClip:
     pptrCurveMapping:
     - {fileID: -6429851349536332370, guid: 90074d673367c3f408164403082f79ee, type: 3}
     - {fileID: 7460046300004610927, guid: 336ef80136c59cf49bd89aa72289b061, type: 3}
+    - {fileID: -5966621866309598838, guid: fca63e13fe30c7643982ea375bf04815, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}
@@ -73,7 +76,7 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.375
+  - time: 0.25
     functionName: JumpFromAnimation
     data: 
     objectReferenceParameter: {fileID: 0}

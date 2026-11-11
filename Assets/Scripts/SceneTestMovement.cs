@@ -48,6 +48,20 @@ public class SceneTestMovement : MonoBehaviour
     private float hitstunTimer = 0.3f;
     private float totalHitstunDuration = 0.3f;
 
+    [SerializeField, Min(0f)] private float jumpDirectionDeadzone = 0.1f;
+
+    private bool isPreparingToJump;
+    private float pendingJumpDirection;
+
+    [SerializeField, Min(0f)] private float jumpPreparationDuration = 0.25f;
+    private float jumpPreparationTimer;
+    private bool waitingForAirborne;
+
+    public bool IsJumpDirectionLocked => isPreparingToJump || waitingForAirborne;
+
+    public bool IsPreparingToJump => isPreparingToJump;
+    public float PendingJumpDirection => pendingJumpDirection;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -190,6 +204,17 @@ public class SceneTestMovement : MonoBehaviour
             }
         }
 
+        if (waitingForAirborne && rb.linearVelocity.y > 0f)
+            waitingForAirborne = false;
+
+        if (isPreparingToJump)
+        {
+            jumpPreparationTimer -= Time.deltaTime;
+
+            if (jumpPreparationTimer <= 0f)
+                LaunchJump();
+        }
+
         if (ledgeCheck == null)
         {
             Debug.LogWarning("Ledge Check Transform is not assigned on " + gameObject.name);
@@ -247,16 +272,59 @@ public class SceneTestMovement : MonoBehaviour
 
     private void Jump()
     {
+        pendingJumpDirection = Mathf.Abs(horizontalInput) > jumpDirectionDeadzone
+            ? Mathf.Sign(horizontalInput)
+            : 0f;
+
+        bool isGroundJump = isGrounded;
+
+        waitingForAirborne = isGroundJump;
+        isPreparingToJump = true;
+        jumpPreparationTimer = isGroundJump ? jumpPreparationDuration : 0f;
         JumpPressed = true;
+
+        if (!isGroundJump)
+            LaunchJump();
     }
-    public void JumpFromAnimation (int unused)
+
+    public void JumpFromAnimation(int unused)
     {
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        LaunchJump();
+    }
+
+    private void LaunchJump()
+    {
+        if (!isPreparingToJump)
+            return;
+
+        rb.linearVelocity = new Vector2(pendingJumpDirection * moveSpeed, jumpForce);
+        isPreparingToJump = false;
     }
 
     private void FixedUpdate()
     {
-        if (isHitStunned) return;
+        if (isHitStunned)
+            return;
+
+        if (isPreparingToJump)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+
+        if (waitingForAirborne)
+        {
+            float takeoffVelocity = Mathf.Abs(horizontalInput) > jumpDirectionDeadzone
+                ? pendingJumpDirection * moveSpeed
+                : 0f;
+
+            rb.linearVelocity = new Vector2(takeoffVelocity, rb.linearVelocity.y);
+            return;
+        }
+
+        float horizontalVelocity = Mathf.Abs(horizontalInput) > jumpDirectionDeadzone
+            ? horizontalInput * moveSpeed
+            : 0f;
 
         float targetSpeed = horizontalInput * moveSpeed;
 
