@@ -14,6 +14,8 @@ public class PlayerDamage : MonoBehaviour
     [Header("Attack Settings")]
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackRange = 1.5f;
+    [SerializeField] private float attackDelay = 0.5f; // Delay between attacks
+    [SerializeField] private float lastAttackTime = 0f; // Time of the last attack
     [SerializeField] private LayerMask playerLayer; // Checks for players
     [SerializeField] private Transform attackPoint; // Empty GameObject
 
@@ -78,10 +80,17 @@ public class PlayerDamage : MonoBehaviour
     {
         UpdateAttackPointPosition();
 
-        if (attackAction != null && attackAction.triggered)
+        if (movementScript != null && movementScript.IsGrounded == false) // or check hitstun flags if exposed
+        {
+            // Add checks here if you want to block attacks during ledge grab or hitstun
+        }
+
+        if (attackAction != null && attackAction.triggered && Time.time >= lastAttackTime + attackDelay)
         {
             PerformAttack();         
+            lastAttackTime = Time.time;
         }
+
     }
 
     private void UpdateAttackPointPosition()
@@ -146,7 +155,9 @@ public class PlayerDamage : MonoBehaviour
                 Vector2 attackDirection = (hit.transform.position - transform.position).normalized;
 
                 // upward bias
-                attackDirection.y += 0.2f;
+                attackDirection.y += 0.1f;
+
+
 
                 // Deal damage and trigger knockback
                 enemyDamage.TakeDamage(attackDamage, attackDirection);

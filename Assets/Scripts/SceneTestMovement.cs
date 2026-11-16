@@ -43,6 +43,8 @@ public class SceneTestMovement : MonoBehaviour
     private bool wasLedgeGrabbed = false;
     private Vector2 grabdir;
     private Transform currentLedge;
+    private float storedVaultDirection = 6f;
+
 
     private Rigidbody2D rb;
     [SerializeField] private InputActionAsset playerControlsAsset;
@@ -193,9 +195,9 @@ public class SceneTestMovement : MonoBehaviour
             Collider2D ledgeHit = Physics2D.OverlapCircle(ledgeCheck.position, ledgeCheckRadius, ledgeLayer);
             if (ledgeHit != null)
             {
-                Vector2 closestPoint = ledgeHit.ClosestPoint(rb.position); // Optional: Get the closest point on the ledge collider to the player
-                Vector2 Toclosest = closestPoint - rb.position; // Optional: Calculate the direction to the ledge
-                float dot = Vector2.Dot(Toclosest.normalized, Vector2.up); // Optional: Check if the ledge is above the player
+                Vector2 closestPoint = ledgeHit.ClosestPoint(rb.position); //Get the closest point on the ledge collider to the player
+                Vector2 Toclosest = closestPoint - rb.position; //Calculate the direction to the ledge
+                float dot = Vector2.Dot(Toclosest.normalized, Vector2.up); //Check if the ledge is above the player
                 if (dot < 0.5f)
                 {
                     GrabLedge(ledgeHit.transform);
@@ -252,14 +254,21 @@ public class SceneTestMovement : MonoBehaviour
 
         isLedgeGrabbed = true;
         currentLedge = ledgeTransform;
-        rb.simulated = false;
+
+        rb.simulated = true;
+        rb.gravityScale = 0f;
         rb.linearVelocity = Vector2.zero;
 
-        bool isLeftOfLedge = transform.position.x < ledgeTransform.position.x;
+        horizontalInput = 0f;
 
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.isTrigger = true;
+
+        bool isLeftOfLedge = transform.position.x < ledgeTransform.position.x;
         isFacingRight = isLeftOfLedge;
 
-        // Apply the snap offset based on which side of the ledge we're on
+        storedVaultDirection = isFacingRight ? 5f : -5f;
+
         float horizontalOffset = isLeftOfLedge ? -Mathf.Abs(ledgeSnapOffset.x) : Mathf.Abs(ledgeSnapOffset.x);
         Vector3 targetSnapPos = ledgeTransform.position + new Vector3(horizontalOffset, ledgeSnapOffset.y, 0f);
         transform.position = targetSnapPos;
@@ -272,6 +281,11 @@ public class SceneTestMovement : MonoBehaviour
         isLedgeGrabbed = false;
         wasLedgeGrabbed = false;
         rb.simulated = true;
+        rb.gravityScale = 1f;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.isTrigger = false;
+
         ledgeCooldownTimer = ledgeCooldownDuration;
         rb.linearVelocity = new Vector2(0f, -2f);
     }
@@ -281,6 +295,10 @@ public class SceneTestMovement : MonoBehaviour
         isLedgeGrabbed = false;
         isClimbingLedge = true;
         rb.simulated = true;
+        rb.gravityScale = 1f;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.isTrigger = false;
 
         // --- Go Straight Up ---
         float timer = 0f;
@@ -299,7 +317,7 @@ public class SceneTestMovement : MonoBehaviour
         {
             timer += Time.deltaTime;    
             // Push forward onto the platform with a slight upward drift
-            rb.linearVelocity = new Vector2(forwardDir, 0f);
+            rb.linearVelocity = new Vector2(storedVaultDirection, 0f);
             yield return null;
         }
 
@@ -362,7 +380,7 @@ public class SceneTestMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (isHitStunned || isClimbingLedge)
+        if (isHitStunned || isClimbingLedge || isLedgeGrabbed)
             return;
 
         if (isPreparingToJump)
@@ -401,6 +419,22 @@ public class SceneTestMovement : MonoBehaviour
     }
     public void ApplyHitstun(float duration)
     {
+        if (isLedgeGrabbed)
+        {
+            ReleaseLedge();
+        }
+
+        else if (isClimbingLedge)
+        {
+            // interrupt climbing if hit mid-climb
+            StopAllCoroutines();
+            isClimbingLedge = false;
+            rb.simulated = true;
+            rb.gravityScale = 1f;
+            Collider2D col = GetComponent<Collider2D>();
+            if (col != null) col.isTrigger = false;
+        }
+
         isHitStunned = true;
         totalHitstunDuration = duration;
         hitstunTimer = duration;
